@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
 
 import { fetchCategories } from '../api';
+import config from '../config';
 
 const HomeSlider = () => {
   const { settings } = useSettings();

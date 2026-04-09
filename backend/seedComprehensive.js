@@ -6,28 +6,18 @@ const Brand = require('./models/Brands');
 
 dotenv.config();
 
-const parentCategories = [
-  { name: 'Çiçek Buketleri', slug: 'cicek-buketleri', description: 'Taze ve tasarım harikası çiçek buketleri.' },
-  { name: 'Özel Günler', slug: 'ozel-gunler', description: 'En özel anlarınızı taçlandıracak tasarımlar.' },
-  { name: 'Mekan & Dekor', slug: 'mekan-dekor', description: 'Yaşam alanlarınıza can katacak bitkiler.' },
-  { name: 'Hediyelikler', slug: 'hediyelikler', description: 'Çiçeklerin yanına harika eşlikçiler.' }
-];
-
-const subCategories = [
-  // Çiçek Buketleri
-  { name: 'Gül Buketleri', slug: 'gul-buketleri', parent: 'Çiçek Buketleri' },
-  { name: 'Mevsim Çiçekleri', slug: 'mevsim-icekleri', parent: 'Çiçek Buketleri' },
-  { name: 'Premium Seri', slug: 'premium-seri', parent: 'Çiçek Buketleri' },
-  
-  // Özel Günler
-  { name: 'Doğum Günü', slug: 'dogum-gunu', parent: 'Özel Günler' },
-  { name: 'Yıldönümü', slug: 'yildonumu', parent: 'Özel Günler' },
-  { name: 'Yeni İş & Tebrik', slug: 'tebrik', parent: 'Özel Günler' },
-  
-  // Mekan & Dekor
-  { name: 'Saksı Çiçekleri', slug: 'saksi-cicekleri', parent: 'Mekan & Dekor' },
-  { name: 'Lüks Orkideler', slug: 'orkideler', parent: 'Mekan & Dekor' },
-  { name: 'Ofis Bitkileri', slug: 'ofis-bitkileri', parent: 'Mekan & Dekor' }
+const flatCategories = [
+  { name: 'Gül Buketleri', slug: 'gul-buketleri', icon: '🌹', location: 'navbar', order: 1 },
+  { name: 'Lüks Orkideler', slug: 'luks-orkideler', icon: '🌸', location: 'navbar', order: 2 },
+  { name: 'Kutuda Çiçekler', slug: 'kutuda-cicekler', icon: '🎁', location: 'navbar', order: 3 },
+  { name: 'Premium Seri', slug: 'premium-seri', icon: '💎', location: 'navbar', order: 4 },
+  { name: 'Doğum Günü', slug: 'dogum-gunu', icon: '🎂', location: 'sidebar', order: 5 },
+  { name: 'Yıldönümü', slug: 'yildonumu', icon: '💍', location: 'sidebar', order: 6 },
+  { name: 'Yeni İş & Tebrik', slug: 'tebrik', icon: '🎉', location: 'sidebar', order: 7 },
+  { name: 'Saksı Çiçekleri', slug: 'saksi-cicekleri', icon: '🪴', location: 'sidebar', order: 8 },
+  { name: 'Ofis Bitkileri', slug: 'ofis-bitkileri', icon: '🌿', location: 'sidebar', order: 9 },
+  { name: 'Hediyelikler', slug: 'hediyelikler', icon: '🧸', location: 'sidebar', order: 10 },
+  { name: 'Mevsim Çiçekleri', slug: 'mevsim-icekleri', icon: '🌻', location: 'sidebar', order: 11 }
 ];
 
 const products = [
@@ -198,26 +188,17 @@ const seedData = async () => {
       description: 'Zerafetin ve lüks tasarımın İstanbul\'daki adresi.'
     });
 
-    // Seed Parent Categories
-    const parentMap = {};
-    for (const pc of parentCategories) {
-      const created = await Category.create(pc);
-      parentMap[pc.name] = created._id;
-    }
-    console.log('Parent categories seeded.');
-
-    // Seed Subcategories
+    // Seed Categories
     const catMap = {};
-    for (const sc of subCategories) {
-      const parentId = parentMap[sc.parent];
-      const created = await Category.create({ ...sc, parentCategory: parentId });
-      catMap[sc.name] = created._id;
+    for (const cat of flatCategories) {
+      const created = await Category.create(cat);
+      catMap[cat.name] = created._id;
     }
-    console.log('Subcategories seeded.');
+    console.log('Categories seeded.');
 
     // Seed Products
     for (const p of products) {
-      const categoryId = catMap[p.category] || parentMap[p.category];
+      const categoryId = catMap[p.category];
       if (!categoryId) {
           console.warn(`Category not found for product: ${p.name}`);
           continue;
