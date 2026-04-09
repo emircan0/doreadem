@@ -224,7 +224,7 @@ function ProductForm() {
           </button>
           {id && (
             <button 
-              onClick={() => window.open(`http://localhost:5173/product/${id}`, '_blank')} 
+              onClick={() => window.open(`/product/${id}`, '_blank')} 
               className="btn btn-ghost group border-lux-accent/20 text-lux-accent"
             >
               <PhotoIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
