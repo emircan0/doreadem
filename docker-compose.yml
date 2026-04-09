@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: dore_adem_mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: dore_adem
+    ports:
+      - "27017:27017"
+    volumes:
+      - dore_adem_data:/data/db
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: dore_adem_mongo_express
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: "false"
+      ME_CONFIG_MONGODB_AUTH_DATABASE: dore_adem
+    depends_on:
+      - mongodb
+
+volumes:
+  dore_adem_data:
