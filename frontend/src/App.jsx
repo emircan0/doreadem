@@ -38,7 +38,7 @@ const App = () => {
         <NotificationProvider>
           <Router>
             <CartProvider>
-              <div className="flex flex-col min-h-screen">
+              <div className="flex flex-col min-h-screen overflow-x-hidden">
                   <ToastContainer 
                   position="bottom-right"
                   autoClose={3000}
