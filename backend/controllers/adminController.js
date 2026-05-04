@@ -8,7 +8,7 @@ const adminLogin = async (req, res) => {
   const { username, email, password } = req.body;
   console.log('--- LOGIN ATTEMPT ---');
   console.log('Identifier (User/Email):', username || email);
-  
+
   try {
     const identifier = username || email;
     const admin = await Admin.findOne({
@@ -22,7 +22,7 @@ const adminLogin = async (req, res) => {
 
     console.log('Admin bulundu, şifre kontrol ediliyor...');
     const isPasswordMatch = await admin.matchPassword(password);
-    
+
     if (!isPasswordMatch) {
       console.log('LOGIN FAIL: Şifre uyuşmadı.');
       return res.status(401).json({ message: 'Geçersiz parola' });
