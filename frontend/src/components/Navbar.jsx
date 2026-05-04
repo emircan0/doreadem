@@ -186,35 +186,33 @@ const Navbar = () => {
                 </div>
             </div>
 
-            {/* TIER 3: Nested Category Bar (Desktop) */}
-            <div className="hidden md:block w-full bg-white border-t border-gray-100">
-                <div className="container mx-auto px-6 lg:px-12 flex justify-center">
-                    <div className="flex items-center">
-                        <Link 
-                            to="/tumu" 
-                            className="px-6 py-4 text-[11px] font-black tracking-[0.2em] text-lux-accent hover:bg-lux-bg transition-all uppercase whitespace-nowrap bg-lux-bg/50"
+            {/* TIER 3: Nested Category Bar (Desktop & Mobile Scrollable) */}
+            <div className="w-full bg-white border-t border-gray-100 overflow-x-auto scrollbar-hide">
+                <div className="container mx-auto flex items-center min-w-max px-2 md:px-6 lg:px-12 md:justify-center">
+                    <Link 
+                        to="/tumu" 
+                        className="px-4 md:px-6 py-3 md:py-4 text-[10px] md:text-[11px] font-black tracking-[0.1em] md:tracking-[0.2em] text-lux-accent hover:bg-lux-bg transition-all uppercase whitespace-nowrap bg-lux-bg/50"
+                    >
+                        HIZLI TESLİMAT
+                    </Link>
+                    <Link 
+                        to="/organizasyonlar" 
+                        className="px-4 md:px-6 py-3 md:py-4 text-[10px] md:text-[11px] font-black tracking-[0.1em] md:tracking-[0.2em] text-lux-dark hover:text-lux-accent transition-all duration-300 uppercase whitespace-nowrap flex items-center gap-1.5 md:gap-2 group border-l border-gray-100"
+                    >
+                        <span className="text-xs md:text-sm group-hover:scale-110 transition-transform">🎭</span>
+                        ORGANİZASYONLAR
+                    </Link>
+                    
+                    {navbarCategories.map((cat) => (
+                        <Link
+                            key={cat._id}
+                            to={`/kategori/${cat.slug}`}
+                            className="px-4 md:px-5 py-3 md:py-4 text-[10px] md:text-[11px] font-bold tracking-[0.05em] md:tracking-[0.1em] text-gray-700 hover:text-lux-accent transition-all duration-300 uppercase whitespace-nowrap flex items-center gap-1.5 md:gap-2 group"
                         >
-                            HIZLI TESLİMAT
+                            <span className="text-xs md:text-sm group-hover:scale-110 transition-transform">{cat.icon || '🌹'}</span>
+                            {cat.name}
                         </Link>
-                        <Link 
-                            to="/organizasyonlar" 
-                            className="px-6 py-4 text-[11px] font-black tracking-[0.2em] text-lux-dark hover:text-lux-accent transition-all duration-300 uppercase whitespace-nowrap flex items-center gap-2 group border-l border-gray-100"
-                        >
-                            <span className="text-sm group-hover:scale-110 transition-transform">🎭</span>
-                            ORGANİZASYONLAR
-                        </Link>
-                        
-                        {navbarCategories.map((cat) => (
-                            <Link
-                                key={cat._id}
-                                to={`/kategori/${cat.slug}`}
-                                className="px-5 py-4 text-[11px] font-bold tracking-[0.1em] text-gray-700 hover:text-lux-accent transition-all duration-300 uppercase whitespace-nowrap flex items-center gap-2 group"
-                            >
-                                <span className="text-sm group-hover:scale-110 transition-transform">{cat.icon || '🌹'}</span>
-                                {cat.name}
-                            </Link>
-                        ))}
-                    </div>
+                    ))}
                 </div>
             </div>
 
