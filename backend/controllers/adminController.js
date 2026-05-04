@@ -6,6 +6,9 @@ const { getAdminJwtSecret, protectAdmin } = require('../middleware/adminAuthMidd
 // Admin giriş yap
 const adminLogin = async (req, res) => {
   const { username, email, password } = req.body;
+  console.log('--- LOGIN ATTEMPT ---');
+  console.log('Identifier (User/Email):', username || email);
+  
   try {
     const identifier = username || email;
     const admin = await Admin.findOne({
@@ -13,14 +16,19 @@ const adminLogin = async (req, res) => {
     });
 
     if (!admin) {
+      console.log('LOGIN FAIL: Admin bulunamadı.');
       return res.status(401).json({ message: 'Geçersiz kullanıcı adı veya e-posta' });
     }
 
+    console.log('Admin bulundu, şifre kontrol ediliyor...');
     const isPasswordMatch = await admin.matchPassword(password);
+    
     if (!isPasswordMatch) {
+      console.log('LOGIN FAIL: Şifre uyuşmadı.');
       return res.status(401).json({ message: 'Geçersiz parola' });
     }
 
+    console.log('LOGIN SUCCESS: Giriş başarılı.');
     const token = jwt.sign(
       { id: admin._id, role: 'admin' },
       getAdminJwtSecret(),
@@ -36,6 +44,7 @@ const adminLogin = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('LOGIN ERROR:', error.message);
     res.status(500).json({ message: 'Giriş sırasında hata oluştu', error: error.message });
   }
 };
