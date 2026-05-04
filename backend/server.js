@@ -30,7 +30,13 @@ const connectDB = async () => {
     if (mongoose.connection.readyState >= 1) {
       return;
     }
-    await mongoose.connect(MONGODB_URI, { 
+
+    if (!process.env.MONGODB_URI) {
+      console.error('CRITICAL: MONGODB_URI ortam değişkeni tanımlı değil!');
+      throw new Error('MONGODB_URI is not defined');
+    }
+
+    await mongoose.connect(process.env.MONGODB_URI, { 
       useNewUrlParser: true, 
       useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000
@@ -40,6 +46,7 @@ const connectDB = async () => {
     console.log('----------------------');
   } catch (err) {
     console.error('CRITICAL: MongoDB bağlantı hatası!', err.message);
+    throw err;
   }
 };
 
