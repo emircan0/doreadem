@@ -7,14 +7,14 @@ const {
     updateOrganization, 
     deleteOrganization 
 } = require('../controllers/organizationController');
+const { protectAdmin } = require('../middleware/adminAuthMiddleware');
 
 // Public routes
 router.get('/', getOrganizations);
 router.get('/:slug', getOrganizationBySlug);
 
-// Admin routes (In a real app, add auth middleware here)
-router.post('/', createOrganization);
-router.put('/:id', updateOrganization);
-router.delete('/:id', deleteOrganization);
+router.post('/', protectAdmin, createOrganization);
+router.put('/:id', protectAdmin, updateOrganization);
+router.delete('/:id', protectAdmin, deleteOrganization);
 
 module.exports = router;

@@ -12,6 +12,7 @@ const {
 } = require('../controllers/productController');
 
 const { storage } = require('../config/cloudinary');
+const { protectAdmin } = require('../middleware/adminAuthMiddleware');
 
 const fileFilter = (req, file, cb) => {
   const filetypes = /jpeg|jpg|png|gif|webp/;
@@ -28,11 +29,11 @@ router.get('/', getProducts);
 router.get('/:id', getProductById);
 
 // Image upload only (returns URLs)
-router.post('/upload', upload.array('images', 10), uploadImages);
+router.post('/upload', protectAdmin, upload.array('images', 10), uploadImages);
 
 // Product CRUD with optional image upload
-router.post('/', upload.array('images', 10), createProduct);
-router.put('/:id', upload.array('images', 10), updateProduct);
-router.delete('/:id', deleteProduct);
+router.post('/', protectAdmin, upload.array('images', 10), createProduct);
+router.put('/:id', protectAdmin, upload.array('images', 10), updateProduct);
+router.delete('/:id', protectAdmin, deleteProduct);
 
 module.exports = router;

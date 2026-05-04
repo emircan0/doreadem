@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const protect = require('../middleware/authMiddleware'); 
+const { protectAdmin } = require('../middleware/adminAuthMiddleware');
+const { protectUserOrAdmin, allowSelfOrAdmin } = require('../middleware/roleMiddleware');
 const {
     registerUser,
     loginUser,
@@ -26,10 +28,10 @@ router.post('/register', registerUser);
 router.post('/login', loginUser);
 
 // Kullanıcı silme rotası
-router.delete('/:id', deleteUser);
+router.delete('/:id', protectAdmin, deleteUser);
 
 // Giriş yapan kullanıcının profilini almak
-router.get('/profile', getUserProfile);
+router.get('/profile', protectAdmin, getUserProfile);
 
 // Adres yönetimi (Parametrik profil rotalarından ÖNCE olmalı)
 router.get('/profile/address', protect, getAddresses);
@@ -38,10 +40,10 @@ router.put('/profile/address/:addressId', protect, updateAddressForUser);
 router.delete('/profile/address/:addressId', protect, deleteAddressForUser);
 
 // Kullanıcı profili için ID'ye göre getir
-router.get('/profile/:userId', getUserProfileId);
+router.get('/profile/:userId', protectUserOrAdmin, allowSelfOrAdmin('userId'), getUserProfileId);
 
 // Kullanıcı profilini güncelleme rotası (ID'ye göre)
-router.put('/profile/:userId', updateUserProfile);
+router.put('/profile/:userId', protectUserOrAdmin, allowSelfOrAdmin('userId'), updateUserProfile);
 
 
 // Şifre değiştirme rotası (Giriş yapan kullanıcının şifresini değiştirir)

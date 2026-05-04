@@ -90,6 +90,7 @@ function Checkout() {
         district: addressData.district,
         postalCode: addressData.postalCode
       },
+      shippingMethod: selectedShipping,
       payment: {
         method: selectedPayment,
         status: selectedPayment === 'credit_card' ? 'completed' : 'pending'

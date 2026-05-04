@@ -1,24 +1,46 @@
 import React, { createContext, useContext, useState } from 'react';
+import axios from 'axios';
+import config from '../config';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  // Dev mode: start authenticated. A real implementation would check a token/cookie.
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [user, setUser] = useState({ name: 'Admin User', email: 'admin@example.com', role: 'admin' });
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('adminInfo');
+      return saved ? JSON.parse(saved).admin : null;
+    } catch (error) {
+      localStorage.removeItem('adminInfo');
+      return null;
+    }
+  });
+  const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(localStorage.getItem('adminInfo')));
 
   const login = async (credentials) => {
-    // In a real app, validate credentials against the backend here.
-    // For now, accept any non-empty credentials (the backend handles validation).
-    if (credentials.email && credentials.password) {
-      setIsAuthenticated(true);
-      setUser({ name: 'Admin', email: credentials.email, role: 'admin' });
-      return true;
+    if (!credentials.email || !credentials.password) {
+      return false;
     }
-    return false;
+
+    try {
+      const { data } = await axios.post(`${config.API_BASE}/api/admin/login`, {
+        username: credentials.email,
+        password: credentials.password
+      });
+
+      localStorage.setItem('adminInfo', JSON.stringify(data));
+      setIsAuthenticated(true);
+      setUser(data.admin);
+      return true;
+    } catch (error) {
+      localStorage.removeItem('adminInfo');
+      setIsAuthenticated(false);
+      setUser(null);
+      return false;
+    }
   };
 
   const logout = () => {
+    localStorage.removeItem('adminInfo');
     setUser(null);
     setIsAuthenticated(false);
   };

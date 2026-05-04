@@ -134,6 +134,67 @@ const updateOrderStatus = async (req, res) => {
 const createOrder = async (req, res) => {
   try {
     const { customer, items, totalAmount, shippingAddress, payment, shippingMethod } = req.body;
+
+    if (!customer?.name || !customer?.email || !customer?.phone) {
+      return res.status(400).json({ message: 'Müşteri bilgileri eksik' });
+    }
+
+    if (!shippingAddress?.address || !shippingAddress?.city) {
+      return res.status(400).json({ message: 'Teslimat adresi eksik' });
+    }
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: 'Sepet boş olamaz' });
+    }
+
+    const productIds = items
+      .map(item => item.product)
+      .filter(id => mongoose.Types.ObjectId.isValid(id));
+
+    if (productIds.length !== items.length) {
+      return res.status(400).json({ message: 'Sepette geçersiz ürün bulundu' });
+    }
+
+    const products = await Product.find({
+      _id: { $in: productIds },
+      status: 'active'
+    }).select('name price discount sku stock status');
+
+    const productMap = new Map(products.map(product => [product._id.toString(), product]));
+
+    const normalizedItems = [];
+    let calculatedSubtotal = 0;
+
+    for (const item of items) {
+      const product = productMap.get(item.product.toString());
+
+      if (!product) {
+        return res.status(400).json({ message: 'Sepette satışta olmayan veya bulunamayan ürün var' });
+      }
+
+      const quantity = Number(item.quantity);
+      if (!Number.isInteger(quantity) || quantity < 1) {
+        return res.status(400).json({ message: 'Ürün adedi geçersiz' });
+      }
+
+      if (Number.isFinite(product.stock) && product.stock < quantity) {
+        return res.status(400).json({ message: `${product.name} için yeterli stok yok` });
+      }
+
+      const unitPrice = Number((product.price * (1 - (product.discount || 0) / 100)).toFixed(2));
+      calculatedSubtotal += unitPrice * quantity;
+
+      normalizedItems.push({
+        product: product._id,
+        name: product.name,
+        price: unitPrice,
+        quantity,
+        sku: product.sku
+      });
+    }
+
+    const shipping = Number(totalAmount?.shipping || shippingMethod?.price || 0);
+    const calculatedTotal = Number((calculatedSubtotal + shipping).toFixed(2));
     
     const newOrder = new Order({
       customer: {
@@ -142,17 +203,11 @@ const createOrder = async (req, res) => {
         phone: customer?.phone,
         user: customer?.user || req.user?._id
       },
-      items: items.map(p => ({
-        product: mongoose.Types.ObjectId.isValid(p.product) ? p.product : null,
-        name: p.name || 'Ürün',
-        price: p.price,
-        quantity: p.quantity,
-        sku: p.sku
-      })),
+      items: normalizedItems,
       totalAmount: {
-        subtotal: totalAmount.subtotal,
-        shipping: totalAmount.shipping,
-        total: totalAmount.total
+        subtotal: Number(calculatedSubtotal.toFixed(2)),
+        shipping,
+        total: calculatedTotal
       },
       shippingAddress: {
         address: shippingAddress?.address || 'Adres belirtilmemiş',

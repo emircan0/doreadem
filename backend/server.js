@@ -24,12 +24,55 @@ console.log('--- DB CONFIG ---');
 console.log('URI Prefix:', MONGODB_URI.startsWith('mongodb+srv') ? 'Atlas (mongodb+srv)' : 'Local (mongodb://)');
 console.log('------------------');
 
+// MongoDB Connection
+const connectDB = async () => {
+  try {
+    if (mongoose.connection.readyState >= 1) {
+      return;
+    }
+    await mongoose.connect(MONGODB_URI, { 
+      useNewUrlParser: true, 
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000
+    });
+    console.log('--- DB CONNECTION ---');
+    console.log('MongoDB bağlantısı başarılı');
+    console.log('----------------------');
+  } catch (err) {
+    console.error('CRITICAL: MongoDB bağlantı hatası!', err.message);
+  }
+};
+
+const allowedOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+
 // Middleware
-app.use(cors()); // CORS middleware
-app.use(express.json()); // JSON parsing
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('CORS origin not allowed'));
+  }
+}));
+app.use(express.json({ limit: '1mb' }));
+app.disable('x-powered-by');
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
+// Vercel serverless ortamında veritabanı bağlantısını her istekte kontrol et
+app.use(async (req, res, next) => {
+  await connectDB();
+  next();
+});
+
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  if (req.method !== 'GET') console.log('Body:', req.body);
   next();
 });
 
@@ -60,35 +103,14 @@ app.use((err, req, res, next) => {
     return res.status(400).json({ message: err.message });
   }
 
+  if (err.message === 'CORS origin not allowed') {
+    return res.status(403).json({ message: 'Bu origin için erişim izni yok' });
+  }
+
   res.status(500).json({ 
     message: 'Bir sunucu hatası oluştu!',
     error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
-});
-
-// MongoDB Connection
-const connectDB = async () => {
-  try {
-    if (mongoose.connection.readyState >= 1) {
-      return;
-    }
-    await mongoose.connect(MONGODB_URI, { 
-      useNewUrlParser: true, 
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000
-    });
-    console.log('--- DB CONNECTION ---');
-    console.log('MongoDB bağlantısı başarılı');
-    console.log('----------------------');
-  } catch (err) {
-    console.error('CRITICAL: MongoDB bağlantı hatası!', err.message);
-  }
-};
-
-// Vercel serverless ortamında veritabanı bağlantısını her istekte kontrol et
-app.use(async (req, res, next) => {
-  await connectDB();
-  next();
 });
 
 // Sadece yerel geliştirmede (Vercel dışında) port dinle
@@ -101,6 +123,5 @@ if (process.env.NODE_ENV !== 'production' && process.env.VERCEL !== '1') {
 }
 
 module.exports = app;
-
 
 

@@ -20,17 +20,21 @@ const protect = async (req, res, next) => {
             
             // Kullanıcıyı veritabanından bul ve req.user'a ata
             req.user = await User.findById(decoded.id).select('-password'); // Şifreyi gizle
+
+            if (!req.user) {
+                return res.status(401).json({ message: 'Kullanıcı bulunamadı, lütfen tekrar giriş yapın' });
+            }
+
             next(); // Middleware chain'ini devam ettir
         } catch (error) {
             console.error('Authentication error:', error);
-            res.status(401).json({ message: 'Yetkisiz giriş' });
+            return res.status(401).json({ message: 'Yetkisiz giriş' });
         }
     }
 
     if (!token) {
-        res.status(401).json({ message: 'Token bulunamadı, lütfen giriş yapın' });
+        return res.status(401).json({ message: 'Token bulunamadı, lütfen giriş yapın' });
     }
 };
 
 module.exports = protect;
-

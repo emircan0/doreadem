@@ -1,12 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { adminLogin } = require('../controllers/adminController');
+const { adminLogin, protectAdmin } = require('../controllers/adminController');
 const { getOrders, updateOrderStatus, getStatistics } = require('../controllers/orderController');
 const { createProduct, deleteProduct, getProducts } = require('../controllers/productController');
 const { getInvoices, createInvoice, getInvoiceByOrderId, getInvoiceStats } = require('../controllers/invoiceController');
 
 // Admin giriş
 router.post('/login', adminLogin);
+
+router.use(protectAdmin);
 
 // İstatistikler
 router.get('/statistics', getStatistics);
