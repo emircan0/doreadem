@@ -104,7 +104,7 @@ const HomeSlider = () => {
                   <Link
                     key={s._id || i}
                     to={s.ctaLink || '/kategori/tumu'}
-                    className={`absolute inset-0 transition-all duration-1000 ease-in-out block ${i === current ? 'opacity-100 z-10 scale-100 cursor-pointer' : 'opacity-0 z-0 scale-105 pointer-events-none'}`}
+                    className={`absolute inset-0 transition-all duration-[1200ms] ease-in-out block ${i === current ? 'opacity-100 z-10 scale-100' : 'opacity-0 z-0 scale-110 pointer-events-none'}`}
                   >
                     <img
                       src={fullUrl}
@@ -112,7 +112,26 @@ const HomeSlider = () => {
                       className={`w-full h-full object-cover object-center ${i === current ? 'animate-ken-burns' : ''}`}
                       loading={i === 0 ? 'eager' : 'lazy'}
                     />
-                    <div className="absolute inset-0 bg-black/5" />
+                    
+                    {/* Content Overlay */}
+                    <div className="absolute inset-0 bg-black/30 flex flex-col justify-center px-8 md:px-16 lg:px-24">
+                      <div className={`max-w-xl transition-all duration-1000 delay-300 transform ${i === current ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+                         <span className="inline-block text-[10px] md:text-xs font-bold text-white tracking-[0.4em] uppercase mb-4 opacity-80">
+                           Dore Adem Special
+                         </span>
+                         <h2 className="text-3xl md:text-5xl lg:text-7xl font-serif text-white mb-6 leading-[1.1]" style={{ fontFamily: "'Playfair Display', serif" }}>
+                           {s.title}
+                         </h2>
+                         <p className="text-sm md:text-lg text-white/90 font-light mb-8 max-w-sm leading-relaxed">
+                           {s.subtitle}
+                         </p>
+                         <div className="flex items-center gap-6">
+                            <span className="btn-primary">
+                               {s.ctaText || 'Hemen Keşfet'}
+                            </span>
+                         </div>
+                      </div>
+                    </div>
                   </Link>
                 );
               })}

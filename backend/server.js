@@ -32,9 +32,13 @@ app.use((req, res, next) => {
   if (req.method !== 'GET') console.log('Body:', req.body);
   next();
 });
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 // Routes
+app.get('/', (req, res) => {
+  res.json({ message: 'Dore Adem API Vercel üzerinde çalışıyor!', status: 'OK' });
+});
+
 app.use('/api/products', productRoutes); 
 app.use('/api/orders', orderRoutes); 
 app.use('/api/users', userRoutes); 
@@ -62,38 +66,41 @@ app.use((err, req, res, next) => {
   });
 });
 
-// MongoDB Connection & Server Start
-const startServer = async () => {
+// MongoDB Connection
+const connectDB = async () => {
   try {
+    if (mongoose.connection.readyState >= 1) {
+      return;
+    }
     await mongoose.connect(MONGODB_URI, { 
       useNewUrlParser: true, 
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000 // 5 saniye sonra timeout ver
+      serverSelectionTimeoutMS: 5000
     });
     console.log('--- DB CONNECTION ---');
     console.log('MongoDB bağlantısı başarılı');
     console.log('----------------------');
-
-    // Server Start (Sadece DB bağlandıktan sonra)
-    app.listen(PORT, () => {
-      console.log(`Server http://localhost:${PORT} adresinde çalışıyor`);
-    });
   } catch (err) {
-    console.error('CRITICAL: MongoDB bağlantı hatası!');
-    console.error('Hata Mesajı:', err.message);
-    
-    if (err.message.includes('ECONNREFUSED')) {
-      console.log('\n' + '='.repeat(50));
-      console.log('İPUCU: Yerel MongoDB (Docker) çalışmıyor olabilir.');
-      console.log('Çözüm: "docker-compose up -d" komutunu çalıştırın.');
-      console.log('='.repeat(50) + '\n');
-    }
-    
-    // Uygulamayı durdur (Nodemon varsa tekrar deneyecektir)
-    process.exit(1);
+    console.error('CRITICAL: MongoDB bağlantı hatası!', err.message);
   }
 };
 
-startServer();
+// Vercel serverless ortamında veritabanı bağlantısını her istekte kontrol et
+app.use(async (req, res, next) => {
+  await connectDB();
+  next();
+});
+
+// Sadece yerel geliştirmede (Vercel dışında) port dinle
+if (process.env.NODE_ENV !== 'production' && process.env.VERCEL !== '1') {
+  const PORT = process.env.PORT || 5001;
+  app.listen(PORT, async () => {
+    await connectDB();
+    console.log(`Server http://localhost:${PORT} adresinde çalışıyor`);
+  });
+}
+
+module.exports = app;
+
 
 

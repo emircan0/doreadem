@@ -76,12 +76,12 @@ const ProductCard = ({ product }) => {
           )}
         </div>
  
-        {/* Quick Add Overlay - Sleek Glassmorphism */}
-        <div className={`absolute inset-x-4 bottom-4 transition-all duration-700 ease-in-out z-20 ${isHovered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 text-[0px]'}`}>
+        {/* Quick Add Button - Visible on mobile by default, hover on desktop */}
+        <div className={`absolute inset-x-3 bottom-3 md:inset-x-4 md:bottom-4 transition-all duration-700 ease-in-out z-20 ${isHovered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-100 lg:opacity-0'}`}>
           <button
             onClick={handleAddToCart}
             disabled={loading || product.stock === 0}
-            className="w-full bg-white/95 backdrop-blur-md text-lux-dark py-3.5 rounded-xl text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-lux-accent hover:text-white transition-all duration-300 shadow-xl active:scale-95 disabled:bg-white/50 disabled:cursor-not-allowed"
+            className="w-full bg-white/95 backdrop-blur-md text-lux-dark py-3 md:py-3.5 rounded-xl text-[9px] md:text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-lux-accent hover:text-white transition-all duration-300 shadow-xl active:scale-95 disabled:bg-white/50 disabled:cursor-not-allowed"
           >
             {loading ? '...' : (product.stock === 0 ? 'TÜKENDİ' : 'SEPETE EKLE')}
           </button>

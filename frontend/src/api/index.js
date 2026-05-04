@@ -19,7 +19,7 @@ API.interceptors.request.use((req) => {
 });
 
 // Ürün API'leri
-export const fetchProducts = () => API.get('/products');
+export const fetchProducts = (params) => API.get('/products', { params });
 export const fetchProduct = (id) => API.get(`/products/${id}`);
 export const createProduct = (newProduct) => API.post('/products', newProduct);
 export const updateProduct = (id, updatedProduct) => API.patch(`/products/${id}`, updatedProduct);

@@ -3,38 +3,31 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
 
-// Dosya yükleme ayarları
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/');
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
-});
 
-const fileFilter = (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (allowedTypes.includes(file.mimetype)) {
-        cb(null, true);
-    } else {
-        cb(new Error('Geçersiz dosya türü'), false);
-    }
-};
 
-const upload = multer({
-    storage: storage,
-    fileFilter: fileFilter,
-    limits: { fileSize: 5 * 1024 * 1024 }
-}).array('images', 10);
-
-// Tüm ürünleri getir (Filtreleme ve Sıralama desteğiyle)
+// Tüm ürünleri getir (Filtreleme, Arama ve Sıralama desteğiyle)
 const getProducts = async (req, res) => {
     try {
-        const { category, sort } = req.query;
+        const { category, sort, q } = req.query;
         let query = {};
 
-        // Kategoriye göre filtrele (Slug üzerinden)
+        // Arama mantığı (q parametresi varsa)
+        if (q) {
+            const Category = require('../models/Categories');
+            // Önce aramaya uyan kategorileri bulalım
+            const matchingCategories = await Category.find({
+                name: { $regex: q, $options: 'i' }
+            });
+            const categoryIds = matchingCategories.map(c => c._id);
+
+            query.$or = [
+                { name: { $regex: q, $options: 'i' } },
+                { description: { $regex: q, $options: 'i' } },
+                { categories: { $in: categoryIds } }
+            ];
+        }
+
+        // Kategoriye göre filtrele (Slug üzerinden) - Arama ile birlikte çalışabilir
         if (category && category !== 'tumu') {
             const Category = require('../models/Categories');
             const foundCategory = await Category.findOne({ slug: category });
@@ -89,7 +82,7 @@ const uploadImages = async (req, res) => {
         if (!req.files || req.files.length === 0) {
             return res.status(400).json({ message: 'Dosya yüklenmedi' });
         }
-        const urls = req.files.map(file => `/uploads/${file.filename}`);
+        const urls = req.files.map(file => file.path);
         res.json({ urls });
     } catch (error) {
         res.status(500).json({ message: 'Resim yüklenirken hata oluştu', error: error.message });
@@ -99,7 +92,7 @@ const uploadImages = async (req, res) => {
 // Ürün oluştur
 const createProduct = async (req, res) => {
     try {
-        const imagePaths = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
+        const imagePaths = req.files ? req.files.map(file => file.path) : [];
         
         // Parse existingImages if provided
         let existingImages = [];
@@ -150,21 +143,16 @@ const updateProduct = async (req, res) => {
         }
 
         // Handle new uploaded files
-        const newImagePaths = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
+        const newImagePaths = req.files ? req.files.map(file => file.path) : [];
         
         // Handle existing images sent from frontend
         let existingImages = [];
         if (req.body.existingImages) {
             try {
                 existingImages = JSON.parse(req.body.existingImages);
-                // Normalize: strip server URL prefix if present (any domain)
-                existingImages = existingImages.map(url => {
-                    const uploadIndex = url.indexOf('/uploads/');
-                    if (uploadIndex !== -1) {
-                        return url.substring(uploadIndex);
-                    }
-                    return url;
-                });
+                // Normalizasyon: Cloudinary tam URL döndürdüğü için eski /uploads/ prefixlerini koru.
+                // Eğer URL zaten bir Cloudinary veya dış bağlantıysa olduğu gibi bırak.
+                existingImages = existingImages.map(url => url);
             } catch(e) {}
         }
         
@@ -238,6 +226,5 @@ module.exports = {
     createProduct,
     updateProduct,
     deleteProduct,
-    uploadImages,
-    upload
+    uploadImages
 };

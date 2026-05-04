@@ -11,33 +11,28 @@ const SearchResults = () => {
   const query = searchParams.get('q') || '';
 
   useEffect(() => {
-    const getProducts = async () => {
+    const getSearchResults = async () => {
       setLoading(true);
       try {
-        const { data } = await fetchProducts();
-        setProducts(data);
+        // Backend'den arama sonuçlarını getir
+        const { data } = await fetchProducts({ q: query });
+        setFilteredProducts(data);
+        
+        // Öneriler için ana ürün listesi boşsa bir kez doldur
+        if (products.length === 0) {
+            const all = await fetchProducts();
+            setProducts(all.data);
+        }
       } catch (error) {
         console.error('Search data fetch error:', error);
       } finally {
         setLoading(false);
       }
     };
-    getProducts();
-    window.scrollTo(0, 0);
-  }, []);
 
-  useEffect(() => {
-    if (query) {
-      const results = products.filter(p => 
-        p.name.toLowerCase().includes(query.toLowerCase()) || 
-        p.category.toLowerCase().includes(query.toLowerCase()) ||
-        (p.description && p.description.toLowerCase().includes(query.toLowerCase()))
-      );
-      setFilteredProducts(results);
-    } else {
-      setFilteredProducts([]);
-    }
-  }, [query, products]);
+    getSearchResults();
+    window.scrollTo(0, 0);
+  }, [query]); // Query değiştikçe tekrar çalışır
 
   return (
     <div className="bg-lux-bg min-h-screen pb-24">

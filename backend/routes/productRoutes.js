@@ -11,11 +11,7 @@ const {
   uploadImages
 } = require('../controllers/productController');
 
-// Multer config
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => { cb(null, 'uploads/'); },
-  filename: (req, file, cb) => { cb(null, Date.now() + path.extname(file.originalname)); }
-});
+const { storage } = require('../config/cloudinary');
 
 const fileFilter = (req, file, cb) => {
   const filetypes = /jpeg|jpg|png|gif|webp/;
