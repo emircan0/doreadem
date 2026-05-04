@@ -27,20 +27,22 @@ console.log('------------------');
 // MongoDB Connection
 const connectDB = async () => {
   try {
+    const uri = process.env.MONGODB_URI || MONGODB_URI; // Fallback to the constant defined at line 21
+
     if (mongoose.connection.readyState >= 1) {
       return;
     }
 
-    await mongoose.connect(MONGODB_URI, { 
+    console.log('Connecting to MongoDB...');
+    await mongoose.connect(uri, { 
       useNewUrlParser: true, 
       useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000
     });
-    console.log('--- DB CONNECTION ---');
     console.log('MongoDB bağlantısı başarılı');
-    console.log('----------------------');
   } catch (err) {
     console.error('CRITICAL: MongoDB bağlantı hatası!', err.message);
+    throw err;
   }
 };
 
