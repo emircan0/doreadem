@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { getUserOrders, updateOrderStatus, getOrderById, createOrder, deleteOrder, getOrders } = require('../controllers/orderController');
+const { getUserOrders, updateOrderStatus, getOrderById, createOrder, deleteOrder, getOrders, getOrderByNumber } = require('../controllers/orderController');
 const { protectAdmin } = require('../middleware/adminAuthMiddleware');
 const { protectUserOrAdmin, allowEmailOwnerOrAdmin } = require('../middleware/roleMiddleware');
+
 
 // Siparişleri filtreli getir (Email bazlı)
 router.get('/user/:email', protectUserOrAdmin, allowEmailOwnerOrAdmin('email'), getUserOrders);
@@ -15,6 +16,9 @@ router.get('/:id', getOrderById);
 
 // Sipariş durumunu güncelle
 router.put('/:id/status', protectAdmin, updateOrderStatus);
+
+// Sipariş takip (Public - Sipariş numarası ile)
+router.get('/track/:orderNumber', getOrderByNumber);
 
 // Yeni sipariş oluştur
 router.post('/', createOrder);

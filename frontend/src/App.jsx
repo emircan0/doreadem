@@ -6,7 +6,6 @@ import Home from './pages/Home';
 import Cart from './pages/Cart';
 import ProductDetail from './pages/ProductDetail';
 import CategoryPage from './pages/CategoryPage';
-import Favorites from './pages/Favorites';
 import Account from './pages/Account';
 import Campaigns from './pages/Campaigns';
 import Checkout from './pages/Checkout';
@@ -64,10 +63,8 @@ const App = () => {
                     <Route path="/sepet" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
                     <Route path="/siparislerim" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                     <Route path="/adreslerim" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                    <Route path="/favorilerim" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
                     <Route path="/product/:id" element={<ProductDetail />} />
                     <Route path="/kategori/:categorySlug" element={<CategoryPage />} />
-                    <Route path="/favoriler" element={<Favorites />} />
                     <Route path="/kampanyalar" element={<Campaigns />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/siparis-takip" element={<OrderTracking />} />

@@ -28,6 +28,7 @@ const getProducts = async (req, res) => {
         }
 
         // Kategoriye göre filtrele (Slug üzerinden) - Arama ile birlikte çalışabilir
+
         if (category && category !== 'tumu') {
             const Category = require('../models/Categories');
             const foundCategory = await Category.findOne({ slug: category });

@@ -5,7 +5,6 @@ import { logout } from '../store/actions/userActions';
 import ProfileInfo from '../components/profile/ProfileInfo';
 import AddressList from '../components/profile/AddressList';
 import OrderHistory from '../components/profile/OrderHistory';
-import Favorites from '../components/profile/Favorites.jsx';
 import NotificationSettings from '../components/profile/NotificationSettings';
 import ChangePassword from '../components/profile/ChangePassword';
 
@@ -30,7 +29,6 @@ const Profile = () => {
         { id: 'profile', label: 'Profilim', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
         { id: 'orders', label: 'Siparişlerim', icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z' },
         { id: 'addresses', label: 'Adreslerim', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z' },
-        { id: 'favorites', label: 'Favorilerim', icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z' },
         { id: 'password', label: 'Güvenlik', icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' },
         { id: 'notifications', label: 'Tercihler', icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' },
     ];
@@ -94,7 +92,6 @@ const Profile = () => {
                         {activeTab === 'addresses' && <AddressList />}
                         {activeTab === 'password' && <ChangePassword />}
                         {activeTab === 'notifications' && <NotificationSettings />}
-                        {activeTab === 'favorites' && <Favorites />}
                     </div>
                 </div>
             </div>

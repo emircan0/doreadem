@@ -4,7 +4,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../store/actions/userActions';
 import { useCart } from '../context/CartContext';
 import { useSettings } from '../context/SettingsContext';
-import { fetchCategories } from '../api';
+import { fetchCategories, searchProducts } from '../api';
+import config from '../config';
 
 const Navbar = () => {
     const dispatch = useDispatch();
@@ -12,11 +13,16 @@ const Navbar = () => {
     const { cartItemCount, setIsCartOpen } = useCart();
     const { settings } = useSettings();
     const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [showDropdown, setShowDropdown] = useState(false);
     const [categories, setCategories] = useState([]);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [isVisible, setIsVisible] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
     const navigate = useNavigate();
+
+    const API_BASE = config.API_BASE;
 
     useEffect(() => {
         const handleScroll = () => {
@@ -61,11 +67,32 @@ const Navbar = () => {
 
     const handleLogout = () => dispatch(logout());
 
+    const handleSearchChange = async (e) => {
+        const value = e.target.value;
+        setSearchQuery(value);
+
+        if (value.trim().length >= 3) {
+            setIsSearching(true);
+            setShowDropdown(true);
+            try {
+                const { data } = await searchProducts(value.trim());
+                setSearchResults(data);
+            } catch (error) {
+                console.error("Arama hatası", error);
+            } finally {
+                setIsSearching(false);
+            }
+        } else {
+            setSearchResults([]);
+            setShowDropdown(false);
+        }
+    };
+
     const handleSearch = (e) => {
         e.preventDefault();
+        setShowDropdown(false);
         if (searchQuery.trim()) {
             navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-            setSearchQuery('');
         }
     };
 
@@ -77,10 +104,7 @@ const Navbar = () => {
             <div className="hidden md:block w-full border-b border-gray-50 bg-gray-50/30">
                 <div className="container mx-auto px-6 lg:px-12 flex justify-end items-center h-9 text-[11px] text-gray-500 font-medium">
                     <div className="flex gap-6">
-                        <Link to="/magaza-ac" className="hover:text-lux-accent transition-colors flex items-center gap-1.5">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-                            Mağaza Açmak İstiyorum
-                        </Link>
+
                         <a href="tel:08501234567" className="hover:text-lux-accent transition-colors">0850 123 45 67</a>
                         <Link to="/siparis-takip" className="hover:text-lux-accent transition-colors">Sipariş Takibi</Link>
                         <Link to="/iletisim" className="hover:text-lux-accent transition-colors">İletişim</Link>
@@ -93,19 +117,61 @@ const Navbar = () => {
                 <div className="container mx-auto px-6 lg:px-12 flex items-center justify-between gap-8 md:gap-12">
                     
                     {/* Left: Search (Desktop Only) */}
-                    <div className="hidden md:flex flex-col flex-1 max-w-sm">
+                    <div className="hidden md:flex flex-col flex-1 max-w-sm relative z-50">
                         <form onSubmit={handleSearch} className="relative group">
                             <input
                                 type="text"
                                 placeholder="Dore Adem'de ara..."
                                 className="w-full min-h-[46px] border border-gray-100 rounded-lg pl-5 pr-12 text-sm focus:outline-none focus:border-lux-accent bg-gray-50/50 transition-all group-hover:bg-white group-hover:shadow-sm"
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={handleSearchChange}
+                                onFocus={() => { if(searchQuery.trim().length >= 3) setShowDropdown(true); }}
+                                onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                             />
                             <button type="submit" className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-lux-accent transition-colors">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                             </button>
                         </form>
+
+                        {/* Search Dropdown */}
+                        {showDropdown && (
+                            <div className="absolute top-[110%] left-0 right-0 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-96 overflow-y-auto py-2 z-[100] animate-fadeIn">
+                                {isSearching ? (
+                                    <div className="p-4 text-center text-sm font-medium text-gray-500">Aranıyor...</div>
+                                ) : searchResults.length > 0 ? (
+                                    <div className="flex flex-col">
+                                        {searchResults.map(product => {
+                                            const img = product.images?.[0] ? (product.images[0].startsWith('http') ? product.images[0] : `${API_BASE}${product.images[0]}`) : null;
+                                            return (
+                                                <Link
+                                                    key={product._id}
+                                                    to={`/product/${product._id}`}
+                                                    className="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
+                                                    onClick={() => {
+                                                        setShowDropdown(false);
+                                                        setSearchQuery('');
+                                                    }}
+                                                >
+                                                    {img ? (
+                                                        <img src={img} alt={product.name} className="w-12 h-12 object-cover rounded shadow-sm" />
+                                                    ) : (
+                                                        <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
+                                                            <svg className="w-6 h-6 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex flex-col">
+                                                        <span className="text-sm font-bold text-lux-dark line-clamp-1">{product.name}</span>
+                                                        <span className="text-xs font-bold text-lux-accent mt-0.5">{product.price?.toLocaleString('tr-TR')} ₺</span>
+                                                    </div>
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="p-4 text-center text-sm font-medium text-gray-500">Ürün bulunamadı</div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Left: Mobile Toggle & Search */}
@@ -136,7 +202,7 @@ const Navbar = () => {
                     </div>
 
                     {/* Right: Actions */}
-                    <div className="flex items-center gap-0.5 md:gap-8 flex-1 justify-end">
+                    <div className="flex items-center gap-4 md:gap-8 flex-1 justify-end">
                         {/* Mobile Search Button */}
                         <Link to="/search" className="md:hidden p-2.5 text-lux-dark hover:text-lux-accent transition-colors">
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
@@ -276,7 +342,6 @@ const Navbar = () => {
                         {userInfo && (
                             <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="text-left text-xs font-bold text-red-500 uppercase tracking-widest">Çıkış</button>
                         )}
-                        <Link to="/favoriler" className="text-xs font-bold text-gray-500 uppercase tracking-widest" onClick={() => setMobileMenuOpen(false)}>Favoriler</Link>
                         <Link to="/siparis-takip" className="text-xs font-bold text-gray-500 uppercase tracking-widest" onClick={() => setMobileMenuOpen(false)}>Sipariş</Link>
                     </div>
                 </div>

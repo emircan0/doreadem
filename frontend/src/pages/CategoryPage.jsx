@@ -26,16 +26,7 @@ function CategoryPage() {
   return (
     <div className="bg-lux-bg min-h-screen pt-10">
       
-      {/* Category Header */}
-      <div className="relative h-[30vh] md:h-[40vh] flex items-center justify-center overflow-hidden bg-white border-b border-gray-100">
-        <div className="relative z-10 text-center px-4">
-          <span className="text-lux-accent text-[10px] font-bold tracking-[0.4em] uppercase mb-4 block">Koleksiyon</span>
-          <h1 className="font-serif text-4xl md:text-6xl text-lux-dark mb-4 uppercase tracking-tighter font-bold">
-            {currentCategory?.name || (categorySlug === 'tumu' ? 'Tüm Ürünler' : 'Yükleniyor...')}
-          </h1>
-          <div className="w-12 h-0.5 bg-lux-accent/30 mx-auto"></div>
-        </div>
-      </div>
+      {/* Removed Category Header */}
 
       {/* Filter Bar */}
       <div className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-20 z-40 transition-all duration-300">

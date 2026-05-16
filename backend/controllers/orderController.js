@@ -34,6 +34,23 @@ const getOrderById = async (req, res) => {
   }
 };
 
+// Sipariş Numarasına göre sipariş takip (Public)
+const getOrderByNumber = async (req, res) => {
+  try {
+    const { orderNumber } = req.params;
+    const order = await Order.findOne({ orderNumber })
+      .select('orderNumber status customer.name items.name items.quantity createdAt totalAmount deliveryDate');
+    
+    if (order) {
+      res.json(order);
+    } else {
+      res.status(404).json({ message: 'Sipariş bulunamadı. Lütfen sipariş numaranızı kontrol edin.' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Sorgulama sırasında bir hata oluştu', error: error.message });
+  }
+};
+
 
 const getOrders = async (req, res) => {
   try {
@@ -255,5 +272,6 @@ module.exports = {
   createOrder,
   deleteOrder,
   getOrders,
-  getStatistics
+  getStatistics,
+  getOrderByNumber
 };

@@ -202,41 +202,6 @@ export const resetPassword = (email) => async (dispatch) => {
     }
 };
 
-// Favorilere Ekleme
-export const addToFavorites = (productId) => async (dispatch) => {
-    try {
-        dispatch({ type: 'USER_ADD_FAVORITE_REQUEST' });
-        const { data } = await api.addToFavorites(productId);
-        
-        dispatch({ type: 'USER_ADD_FAVORITE_SUCCESS', payload: data });
-        dispatch({ type: 'USER_LOGIN_SUCCESS', payload: data }); // Kullanıcı bilgilerini güncelle
-        localStorage.setItem('userInfo', JSON.stringify(data));
-    } catch (error) {
-        dispatch({
-            type: 'USER_ADD_FAVORITE_FAIL',
-            payload: error.response?.data?.message || 'Favorilere ekleme başarısız'
-        });
-        throw error;
-    }
-};
-
-// Favorilerden Çıkarma
-export const removeFromFavorites = (productId) => async (dispatch) => {
-    try {
-        dispatch({ type: 'USER_REMOVE_FAVORITE_REQUEST' });
-        const { data } = await api.removeFromFavorites(productId);
-        
-        dispatch({ type: 'USER_REMOVE_FAVORITE_SUCCESS', payload: data });
-        dispatch({ type: 'USER_LOGIN_SUCCESS', payload: data }); // Updated user state
-        localStorage.setItem('userInfo', JSON.stringify(data));
-    } catch (error) {
-        dispatch({
-            type: 'USER_REMOVE_FAVORITE_FAIL',
-            payload: error.response?.data?.message || 'Favorilerden çıkarma başarısız'
-        });
-        throw error;
-    }
-}; 
 
 export const createOrder = (orderData) => async (dispatch) => {
 

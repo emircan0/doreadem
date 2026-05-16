@@ -20,6 +20,8 @@ API.interceptors.request.use((req) => {
 
 // Ürün API'leri
 export const fetchProducts = (params) => API.get('/products', { params });
+export const searchProducts = (query) => API.get(`/products?q=${encodeURIComponent(query)}`);
+
 export const fetchProduct = (id) => API.get(`/products/${id}`);
 export const createProduct = (newProduct) => API.post('/products', newProduct);
 export const updateProduct = (id, updatedProduct) => API.patch(`/products/${id}`, updatedProduct);
@@ -42,9 +44,6 @@ export const deleteAddress = (id) => API.delete(`/users/profile/address/${id}`);
 export const updateNotificationSettings = (settings) => API.put('/users/profile/notifications', settings);
 export const getAddresses = () => API.get(`/users/profile/address`);
 
-// Favori işlemleri
-export const addToFavorites = (productId) => API.post('/users/favorites', { productId });
-export const removeFromFavorites = (productId) => API.delete(`/users/favorites/${productId}`);
 
 // Kategori API'leri
 export const fetchCategories = () => API.get('/categories');  // Kategorileri al
@@ -54,4 +53,5 @@ export const fetchBrands = () => API.get('/brands');  // Markaları al
 
 export const createOrder = (orderData) => API.post('/orders', orderData);
 export const fetchUserOrders = (userEmail) => API.get(`/orders/user/${userEmail}`);
+export const trackOrder = (orderNumber) => API.get(`/orders/track/${orderNumber}`);
 

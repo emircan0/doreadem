@@ -14,14 +14,13 @@ const SearchResults = () => {
     const getSearchResults = async () => {
       setLoading(true);
       try {
-        // Backend'den arama sonuçlarını getir
-        const { data } = await fetchProducts({ q: query });
-        setFilteredProducts(data);
-        
-        // Öneriler için ana ürün listesi boşsa bir kez doldur
-        if (products.length === 0) {
-            const all = await fetchProducts();
-            setProducts(all.data);
+        if (query) {
+           const { searchProducts } = await import('../api/index');
+           const { data } = await searchProducts(query);
+           setProducts(data);
+           setFilteredProducts(data);
+        } else {
+           setFilteredProducts([]);
         }
       } catch (error) {
         console.error('Search data fetch error:', error);
@@ -32,22 +31,12 @@ const SearchResults = () => {
 
     getSearchResults();
     window.scrollTo(0, 0);
-  }, [query]); // Query değiştikçe tekrar çalışır
+  }, [query]);
+
 
   return (
     <div className="bg-lux-bg min-h-screen pb-24">
-      {/* Search Header */}
-      <div className="bg-white border-b border-lux-dark/5 pt-32 pb-16 md:pt-40 md:pb-24">
-        <div className="container mx-auto px-4 lg:px-12 text-center animate-fade-in">
-          <span className="text-lux-accent text-[11px] font-bold tracking-[0.4em] uppercase mb-4 block">Arama Sonuçları</span>
-          <h1 className="font-display text-4xl md:text-6xl text-lux-dark mb-6 tracking-tight uppercase">
-            "{query}"
-          </h1>
-          <p className="text-lux-muted text-[10px] font-bold tracking-[0.2em] uppercase opacity-60">
-            {filteredProducts.length} Ürün Bulundu
-          </p>
-        </div>
-      </div>
+      {/* Removed Search Header */}
 
       <div className="container mx-auto px-4 lg:px-12 py-16">
         {loading ? (
@@ -79,9 +68,7 @@ const SearchResults = () => {
         <div className="container mx-auto px-4 lg:px-12 py-16 border-t border-lux-dark/5">
            <h3 className="font-display text-xl text-lux-dark mb-12 text-center uppercase tracking-[0.2em]">Sizin İçin Seçtiklerimiz</h3>
            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-              {products.slice(0, 4).map(product => (
-                <ProductCard key={product._id} product={product} />
-              ))}
+              <RecommendedProducts />
            </div>
         </div>
       )}
@@ -90,3 +77,18 @@ const SearchResults = () => {
 };
 
 export default SearchResults;
+
+const RecommendedProducts = () => {
+  const [recs, setRecs] = useState([]);
+  useEffect(() => {
+    import('../api/index').then(({ fetchProducts }) => {
+      fetchProducts().then(res => setRecs(res.data.slice(0,4))).catch(e => console.error(e));
+    });
+  }, []);
+  
+  return (
+    <>
+      {recs.map(p => <ProductCard key={p._id} product={p} />)}
+    </>
+  );
+};
