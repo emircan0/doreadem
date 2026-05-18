@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useSettings } from '../context/SettingsContext';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { createOrder } from '../api/index';
 import config from '../config';
+import { fetchAddresses } from '../store/actions/userActions';
 
 const API_BASE = config.API_BASE;
 
@@ -14,6 +15,7 @@ function Checkout() {
   const { cart, cartTotal, clearCart } = useCart();
   const { settings } = useSettings();
   const { userInfo } = useSelector(state => state.user);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,6 +40,31 @@ function Checkout() {
       navigate('/sepet');
     }
   }, [cart, navigate]);
+
+  // Fetch addresses on mount if logged in
+  useEffect(() => {
+    if (userInfo) {
+      dispatch(fetchAddresses());
+    }
+  }, [dispatch, userInfo]);
+
+  // Pre-fill form with default or first saved address
+  useEffect(() => {
+    if (userInfo?.addresses?.length > 0) {
+      const defaultAddr = userInfo.addresses.find(a => a.isDefault) || userInfo.addresses[0];
+      if (defaultAddr) {
+        setAddressData({
+          name: defaultAddr.fullName || userInfo.name || '',
+          email: userInfo.email || '',
+          phone: defaultAddr.phone || userInfo.phone || '',
+          address: defaultAddr.fullAddress || '',
+          city: defaultAddr.city || 'İstanbul',
+          district: defaultAddr.district || '',
+          postalCode: defaultAddr.zipCode || ''
+        });
+      }
+    }
+  }, [userInfo]);
 
   const handleNext = () => {
     if (currentStep === 0) {
@@ -141,6 +168,55 @@ function Checkout() {
             {currentStep === 0 && (
               <div className="animate-fade-in-up">
                 <h2 className="font-display text-2xl text-lux-dark mb-10 uppercase tracking-widest border-b border-lux-dark/5 pb-4">Teslimat Bilgileri</h2>
+                
+                {/* Saved Address Selector */}
+                {userInfo?.addresses?.length > 0 && (
+                  <div className="mb-10 animate-fade-in">
+                    <label className="lux-label mb-5 text-lux-accent font-bold tracking-[0.2em] uppercase block">Kayıtlı Adresleriniz</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {userInfo.addresses.map((addr) => {
+                        const isSelected = 
+                          addressData.address === addr.fullAddress && 
+                          addressData.city === addr.city && 
+                          addressData.district === addr.district;
+
+                        return (
+                          <div 
+                            key={addr._id}
+                            onClick={() => setAddressData({
+                              name: addr.fullName || userInfo.name || '',
+                              email: userInfo.email || '',
+                              phone: addr.phone || userInfo.phone || '',
+                              address: addr.fullAddress || '',
+                              city: addr.city || 'İstanbul',
+                              district: addr.district || '',
+                              postalCode: addr.zipCode || ''
+                            })}
+                            className={`p-6 bg-white border cursor-pointer transition-all duration-300 hover:border-lux-accent flex flex-col justify-between shadow-sm hover:shadow-md ${isSelected ? 'border-lux-accent ring-1 ring-lux-accent/20 bg-lux-accent/[0.02]' : 'border-lux-dark/5'}`}
+                          >
+                            <div>
+                              <div className="flex justify-between items-center mb-3">
+                                <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-lux-accent">{addr.title}</span>
+                                {addr.isDefault && <span className="text-[8px] text-lux-muted uppercase tracking-widest font-bold bg-gray-50 px-2 py-0.5 rounded">Varsayılan</span>}
+                              </div>
+                              <p className="text-xs font-bold text-lux-dark mb-1">{addr.fullName}</p>
+                              <p className="text-[10px] text-lux-muted mb-2 tracking-wide">{addr.phone}</p>
+                              <p className="text-xs text-lux-dark/80 leading-relaxed font-light line-clamp-2">{addr.fullAddress}</p>
+                              <p className="text-[10px] text-lux-muted mt-2 font-medium tracking-wide">{addr.district} / {addr.city}</p>
+                            </div>
+                            {isSelected && (
+                              <span className="text-[9px] font-bold text-lux-accent uppercase tracking-widest mt-5 flex items-center gap-1.5 self-end">
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                SEÇİLİ
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white p-8 md:p-12 border border-lux-dark/5 shadow-sm">
                   <div className="md:col-span-2">
                     <label className="lux-label">AD SOYAD *</label>
@@ -174,10 +250,7 @@ function Checkout() {
               <div className="animate-fade-in-up">
                 <h2 className="font-display text-2xl text-lux-dark mb-10 uppercase tracking-widest border-b border-lux-dark/5 pb-4">Kargo Seçimi</h2>
                 <div className="space-y-4">
-                  {(settings?.shippingMethods?.length > 0 ? settings.shippingMethods : [
-                    { name: 'Yurtiçi Kargo', price: 49.90, description: '1-3 iş günü' },
-                    { name: 'Aras Kargo', price: 39.90, description: '2-4 iş günü' }
-                  ]).map((m, idx) => (
+                  {(settings?.shippingMethods || []).map((m, idx) => (
                     <label key={idx} className={`block p-6 bg-white border cursor-pointer transition-all hover:border-lux-accent ${selectedShipping?.name === m.name ? 'border-lux-accent ring-1 ring-lux-accent/20' : 'border-lux-dark/5'}`}>
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-4">
@@ -193,6 +266,13 @@ function Checkout() {
                       </div>
                     </label>
                   ))}
+                  {(!settings?.shippingMethods || settings.shippingMethods.length === 0) && (
+                    <div className="p-8 bg-amber-50/50 border border-amber-100 rounded-2xl text-center">
+                      <svg className="w-10 h-10 text-amber-500/80 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                      <p className="text-xs font-bold uppercase tracking-wider text-amber-800">⚠️ Aktif kargo yöntemi bulunmamaktadır.</p>
+                      <p className="text-[10px] text-amber-700/70 mt-1.5 leading-relaxed">Sitede aktif kargo firması tanımlanmamış. Lütfen site yöneticisiyle iletişime geçin.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

@@ -24,6 +24,12 @@ const DEFAULT_SETTINGS = {
     { label: 'Mutlu Müşteri', value: '10K+' }
   ],
   shippingMethods: [],
+  deliveryTimeSlots: [
+    { slot: '09:00 - 12:00', enabled: true },
+    { slot: '12:00 - 17:00', enabled: true },
+    { slot: '17:00 - 21:00', enabled: true }
+  ],
+  blockedTimeSlots: [],
   paymentMethods: {
     bankTransfer: { enabled: true, details: '' },
     creditCard: { enabled: false, provider: 'iyzico', apiKey: '', secretKey: '', baseUrl: 'https://sandbox-api.iyzipay.com' }

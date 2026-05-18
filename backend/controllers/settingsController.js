@@ -30,12 +30,35 @@ const defaultSlides = [
   },
 ];
 
-// GET /api/settings — public
 const getSettings = async (req, res) => {
   try {
     let settings = await Settings.findOne();
     if (!settings) {
       settings = await Settings.create({ heroSlides: defaultSlides });
+    } else {
+      let changed = false;
+      if (!settings.deliveryTimeSlots || settings.deliveryTimeSlots.length === 0) {
+        settings.deliveryTimeSlots = [
+          { slot: '09:00 - 12:00', enabled: true },
+          { slot: '12:00 - 17:00', enabled: true },
+          { slot: '17:00 - 21:00', enabled: true }
+        ];
+        changed = true;
+      }
+      if (!settings.blockedTimeSlots) {
+        settings.blockedTimeSlots = [];
+        changed = true;
+      }
+      if (!settings.shippingMethods || settings.shippingMethods.length === 0) {
+        settings.shippingMethods = [
+          { name: 'Yurtiçi Kargo', price: 49.90, description: '1-3 iş günü', freeAbove: 2000 },
+          { name: 'Aras Kargo', price: 39.90, description: '2-4 iş günü', freeAbove: 2000 }
+        ];
+        changed = true;
+      }
+      if (changed) {
+        await settings.save();
+      }
     }
     res.json(settings);
   } catch (err) {

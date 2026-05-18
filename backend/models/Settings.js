@@ -61,6 +61,28 @@ const settingsSchema = new mongoose.Schema({
     }
   },
   metaKeywords: { type: String, default: '' },
+  deliveryTimeSlots: {
+    type: [
+      {
+        slot: { type: String, required: true },
+        enabled: { type: Boolean, default: true }
+      }
+    ],
+    default: [
+      { slot: '09:00 - 12:00', enabled: true },
+      { slot: '12:00 - 17:00', enabled: true },
+      { slot: '17:00 - 21:00', enabled: true }
+    ]
+  },
+  blockedTimeSlots: {
+    type: [
+      {
+        date: { type: String, required: true },
+        slot: { type: String, required: true }
+      }
+    ],
+    default: []
+  },
   updatedAt: { type: Date, default: Date.now },
 }, { timestamps: true });
 

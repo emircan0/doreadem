@@ -61,6 +61,7 @@ app.use(cors({
   }
 }));
 app.use(express.json({ limit: '1mb' }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.disable('x-powered-by');
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');

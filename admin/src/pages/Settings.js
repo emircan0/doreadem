@@ -12,7 +12,8 @@ import {
   ArrowUpIcon,
   ArrowDownIcon,
   PlusIcon,
-  TrashIcon
+  TrashIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline';
 import config from '../config';
 
@@ -39,6 +40,12 @@ const DEFAULT = {
     { label: 'Çiçek Türü', value: '50+' }
   ],
   shippingMethods: [],
+  deliveryTimeSlots: [
+    { slot: '09:00 - 12:00', enabled: true },
+    { slot: '12:00 - 17:00', enabled: true },
+    { slot: '17:00 - 21:00', enabled: true }
+  ],
+  blockedTimeSlots: [],
   paymentMethods: {
     bankTransfer: { enabled: true, details: '' },
     creditCard: { enabled: false, provider: 'iyzico', apiKey: '', secretKey: '', baseUrl: 'https://sandbox-api.iyzipay.com' }
@@ -118,6 +125,39 @@ function Settings() {
     set('stats', stats);
   };
 
+  const getNextDays = () => {
+    const days = [];
+    const today = new Date();
+    const locale = 'tr-TR';
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      let label = '';
+      if (i === 0) label = 'Bugün';
+      else if (i === 1) label = 'Yarın';
+      else label = date.toLocaleDateString(locale, { weekday: 'long' });
+
+      days.push({
+        full: date.toISOString().split('T')[0],
+        label: label,
+        dayNum: date.getDate(),
+        month: date.toLocaleDateString(locale, { month: 'short' }),
+        formatted: date.toLocaleDateString(locale, { day: 'numeric', month: 'long', weekday: 'short' })
+      });
+    }
+    return days;
+  };
+
+  const handleToggleSlot = (dateStr, slotName, currentlyBlocked) => {
+    let blocked = [...(settings.blockedTimeSlots || [])];
+    if (currentlyBlocked) {
+      blocked = blocked.filter(b => !(b.date === dateStr && b.slot === slotName));
+    } else {
+      blocked.push({ date: dateStr, slot: slotName });
+    }
+    set('blockedTimeSlots', blocked);
+  };
+
   if (loading) return (
     <div className="loading-wrap"><div className="spinner"></div></div>
   );
@@ -178,6 +218,62 @@ function Settings() {
                 <input className="form-input" value={settings.announcement} onChange={e => set('announcement', e.target.value)} placeholder="Özel Koleksiyonlarda %20 İndirim | Ücretsiz Kargo" />
               </div>
             </div>
+          </div>
+        </Section>
+
+        {/* Teslimat Saatleri */}
+        <Section title="Teslimat Saatleri ve Günlük Yoğunluk Ayarları" icon={ClockIcon}>
+          <p className="text-sm text-gray-500 mb-6 border-b border-gray-100 pb-4">
+            Gelecek 7 günün her biri için teslimat saatlerini ayrı ayrı kontrol edin. Yoğun olduğunuz gün ve saat dilimini kapatarak yeni sipariş alımını engelleyebilirsiniz.
+          </p>
+          <div className="space-y-4">
+            {getNextDays().map((day) => (
+              <div key={day.full} className="flex flex-col lg:flex-row lg:items-center justify-between p-4 bg-gray-50/50 border border-gray-100 rounded-2xl gap-4 hover:shadow-sm transition-all duration-300">
+                {/* Sol Taraf: Gün Bilgisi */}
+                <div className="flex items-center gap-4 lg:w-1/4">
+                  <div className="w-12 h-12 rounded-xl bg-white border border-gray-100 flex flex-col items-center justify-center shadow-sm flex-shrink-0">
+                    <span className="text-[10px] font-bold text-indigo-500 uppercase leading-none tracking-tighter mb-0.5">{day.month}</span>
+                    <span className="text-lg font-black text-gray-700 leading-none">{day.dayNum}</span>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-800 leading-tight">{day.label}</h4>
+                    <span className="text-[11px] text-gray-400 font-medium">{day.formatted}</span>
+                  </div>
+                </div>
+
+                {/* Sağ Taraf: 3 Saat Dilimi Toggles */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-grow">
+                  {[
+                    '09:00 - 12:00',
+                    '12:00 - 17:00',
+                    '17:00 - 21:00'
+                  ].map((slot) => {
+                    const isBlocked = (settings.blockedTimeSlots || []).some(b => b.date === day.full && b.slot === slot);
+                    const isOpen = !isBlocked;
+
+                    return (
+                      <div key={slot} className="bg-white border border-gray-200/60 rounded-xl px-4 py-2.5 flex items-center justify-between shadow-sm">
+                        <span className="text-xs font-bold text-gray-600">{slot}</span>
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                          <div className={`w-10 h-5 rounded-full transition-colors relative ${isOpen ? 'bg-emerald-500' : 'bg-gray-300'}`}>
+                            <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isOpen ? 'translate-x-5' : 'translate-x-0'}`} />
+                          </div>
+                          <input
+                            type="checkbox"
+                            className="hidden"
+                            checked={isOpen}
+                            onChange={() => handleToggleSlot(day.full, slot, isBlocked)}
+                          />
+                          <span className="text-[10px] font-semibold text-gray-500 select-none group-hover:text-gray-700 min-w-[32px]">
+                            {isOpen ? 'Açık' : 'Kapalı'}
+                          </span>
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         </Section>
 

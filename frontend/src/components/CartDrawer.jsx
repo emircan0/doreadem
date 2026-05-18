@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useSettings } from '../context/SettingsContext';
 
 const CartDrawer = () => {
     const { isCartOpen, setIsCartOpen, cart, removeFromCart, updateQuantity, cartTotal, deliveryDetails, updateDeliveryDetails } = useCart();
+    const { settings } = useSettings();
     
     // Yetersiz tutar hesaplama (Free shipping threshold: 500 TL)
     const FREE_SHIPPING_THRESHOLD = 500;
@@ -34,12 +36,24 @@ const CartDrawer = () => {
         return days;
     };
 
-    const TIME_SLOTS = [
-        '09:00 - 12:00',
-        '12:00 - 15:00',
-        '15:00 - 18:00',
-        '18:00 - 21:00'
-    ];
+    const getAvailableSlotsForDate = (dateStr) => {
+        const globalSlots = (settings?.deliveryTimeSlots || [
+            { slot: '09:00 - 12:00', enabled: true },
+            { slot: '12:00 - 17:00', enabled: true },
+            { slot: '17:00 - 21:00', enabled: true }
+        ])
+        .filter(slot => slot.enabled)
+        .map(slot => slot.slot);
+
+        if (!dateStr) return globalSlots;
+
+        const blockedSlots = settings?.blockedTimeSlots || [];
+        return globalSlots.filter(slot => 
+            !blockedSlots.some(b => b.date === dateStr && b.slot === slot)
+        );
+    };
+
+    const TIME_SLOTS = getAvailableSlotsForDate(deliveryDetails.date);
 
     // Prevent scrolling on body when drawer is open
     useEffect(() => {
@@ -121,7 +135,7 @@ const CartDrawer = () => {
                             {getNextDays().map((day) => (
                                 <button
                                     key={day.full}
-                                    onClick={() => updateDeliveryDetails({ date: day.full })}
+                                    onClick={() => updateDeliveryDetails({ date: day.full, timeSlot: null })}
                                     className={`flex flex-col items-center justify-center min-w-[72px] h-[85px] rounded-2xl border transition-all duration-500 ${deliveryDetails.date === day.full ? 'border-lux-accent bg-lux-accent/5 ring-1 ring-lux-accent/20' : 'border-gray-100 hover:border-lux-accent/30 bg-gray-50/20'}`}
                                 >
                                     <span className={`text-[10px] font-bold uppercase tracking-tighter mb-1 h-3 ${deliveryDetails.date === day.full ? 'text-lux-accent' : 'text-gray-400'}`}>{day.label}</span>
@@ -133,17 +147,23 @@ const CartDrawer = () => {
 
                         {/* Time Slots Grid */}
                         {deliveryDetails.date && (
-                            <div className="grid grid-cols-2 gap-2 mt-4 animate-fade-in-up">
-                                {TIME_SLOTS.map((slot) => (
-                                    <button
-                                        key={slot}
-                                        onClick={() => updateDeliveryDetails({ timeSlot: slot })}
-                                        className={`py-3.5 px-4 rounded-xl border text-[11px] font-bold tracking-tight transition-all duration-500 ${deliveryDetails.timeSlot === slot ? 'border-lux-dark bg-lux-dark text-white shadow-xl translate-y-[-1px]' : 'border-gray-100 bg-gray-50/50 text-gray-400 hover:border-gray-200 hover:text-gray-600'}`}
-                                    >
-                                        {slot}
-                                    </button>
-                                ))}
-                            </div>
+                            TIME_SLOTS.length > 0 ? (
+                                <div className="grid grid-cols-2 gap-2 mt-4 animate-fade-in-up">
+                                    {TIME_SLOTS.map((slot) => (
+                                        <button
+                                            key={slot}
+                                            onClick={() => updateDeliveryDetails({ timeSlot: slot })}
+                                            className={`py-3.5 px-4 rounded-xl border text-[11px] font-bold tracking-tight transition-all duration-500 ${deliveryDetails.timeSlot === slot ? 'border-lux-dark bg-lux-dark text-white shadow-xl translate-y-[-1px]' : 'border-gray-100 bg-gray-50/50 text-gray-400 hover:border-gray-200 hover:text-gray-600'}`}
+                                        >
+                                            {slot}
+                                        </button>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="mt-4 p-4 bg-red-50 border border-red-100 text-red-700 rounded-2xl text-[11px] font-bold text-center animate-fade-in-up">
+                                    ⚠️ Yoğunluk nedeniyle teslimat saatlerimiz geçici olarak kapanmıştır. Lütfen daha sonra tekrar deneyiniz.
+                                </div>
+                            )
                         )}
                     </div>
 
